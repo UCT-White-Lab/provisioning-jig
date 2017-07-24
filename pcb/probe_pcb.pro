@@ -1,4 +1,4 @@
-update=Mon 24 Jul 2017 09:28:08 CAT
+update=Mon 24 Jul 2017 09:46:04 CAT
 version=1
 last_client=kicad
 [pcbnew]
