@@ -1255,4 +1255,18 @@ F 3 "" H 12350 7900 50  0001 C CNN
 $EndComp
 Text Label 12350 7800 2    60   ~ 0
 LCD_RS
+Text Label 12350 6300 2    60   ~ 0
+BTN_Target
+Text Label 12350 6500 2    60   ~ 0
+BTN_Debug
+Text Label 12850 6700 0    60   ~ 0
+LED_BUSY
+Text Label 12850 6500 0    60   ~ 0
+LED_SUCCESS
+Text Label 12850 6300 0    60   ~ 0
+LED_FAIL
+Text Label 12850 6800 0    60   ~ 0
+PI_READY
+Text Notes 12500 5550 0    60   ~ 0
+The Pi ribbon connector and LCD
 $EndSCHEMATC
