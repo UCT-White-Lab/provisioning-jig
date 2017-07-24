@@ -697,10 +697,6 @@ Text Label 5950 8550 2    60   ~ 0
 PC14
 Text Label 5950 8650 2    60   ~ 0
 PC15
-Text Label 8600 7850 0    60   ~ 0
-PB8
-Text Label 8600 7950 0    60   ~ 0
-PB9
 Text Label 7850 9600 0    60   ~ 0
 PA12
 Text Label 7850 9100 0    60   ~ 0
@@ -1435,10 +1431,6 @@ F 3 "" H 11800 9000 50  0001 C CNN
 	1    11800 9000
 	0    1    1    0   
 $EndComp
-Text Label 10800 7850 0    60   ~ 0
-PB8
-Text Label 10800 7950 0    60   ~ 0
-PB9
 Wire Wire Line
 	10950 8350 11300 8350
 Wire Wire Line
@@ -1529,4 +1521,8 @@ Text Label 11300 9650 2    60   ~ 0
 LED+
 Text Label 11300 9750 2    60   ~ 0
 LED-
+Text Label 7850 8400 0    60   ~ 0
+PB8
+Text Label 7850 8300 0    60   ~ 0
+PB9
 $EndSCHEMATC
