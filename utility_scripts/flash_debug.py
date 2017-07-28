@@ -4,8 +4,7 @@ import pexpect
 import logging
 import os
 
-elf_file = "/home/jonathan/stm_jig/binaries/demo_2015.elf" #main.elf? Probably<<<<<<<<<
-
+dfu_hex = '/home/jonathan/stm_jig/binaries/DFU_ST-Link-V2.hex'
 
 
 
@@ -13,16 +12,16 @@ class TelConFailed(Exception):
     pass
 
 class TelCon:
-    def __init__(self, logger=logging.getLogger(__name__)):
+    def __init__(self, logger = logging.getLogger(__name__)):
         self.logger = logger
         logging.basicConfig(level=logging.DEBUG)
         self.tel = pexpect.spawn("telnet localhost 4444", timeout = 3)
         telcon_start = self.tel.expect([
             "Connected to localhost",
             "unable to"
-        ])
+            ])
         if telcon_start == 0:
-            self.logger.info("connected to telnet")
+            logging.info("connected to telnet")
         else:
             raise TelConFailed()
 
@@ -31,24 +30,29 @@ class TelCon:
 
     def halt(self):
         self.tel.sendline("reset halt")
-        self.tel.expect_exact("target halted")
-        self.logger.info("halted")
+        self.tel.expect("[\s\S]*target halted[\s\S]*")
+        logging.info("halted")
+
+    def remove_protection(self):
+        self.tel.sendline("flash protect 0 0 last off")
+        self.tel.expect("cleared protection for sectors")
+        logging.info("erased")
 
     def erase(self):
         self.tel.sendline("flash erase_sector 0 0 0")
-        self.tel.expect_exact("erased sectors")
-        self.logger.info("erased")
+        self.tel.expect("[\s\S]*erased sectors[\s\S]*")
+        logging.info("erased")
 
     def load(self):
-        self.tel.sendline("flash write_image erase "+elf_file)
-        self.tel.expect("wrote [\s\S]* from file")
-        self.tel.sendline("verify_image "+elf_file)
-        self.tel.expect("verified[\s\S]*bytes in")
-        self.logger.info("Loaded and verified")
+        self.tel.sendline("flash write_image erase "+dfu_hex)
+        self.tel.expect("[\s\S]*wrote[\s\S]*from file[\s\S]*")
+        self.tel.sendline("verify_image "+dfu_hex)
+        self.tel.expect("[\s\S]*verified[\s\S]*bytes in[\s\S]*")
+        logging.info("LOADED!")
 
     def __exit__(self, type, value, traceback):
-        self.tel.terminate()
-        self.logger.info("Telnet connection terminated")
+        self.tel.send("exit")
+        logging.info("Telnet connection terminated")
 
 class OpenOCDFailed(Exception):
     pass
@@ -57,27 +61,24 @@ class OpenOCD:
     def __init__(self, logger=logging.getLogger(__name__)):
         self.logger = logger
         logging.basicConfig(level=logging.DEBUG)
-        self.ocd = pexpect.spawn("openocd -f interface/stlink-v2.cfg -f target/stm32f0x_stlink.cfg", timeout=3)
+        self.ocd = pexpect.spawn("openocd -f interface/stlink-v2.cfg -f target/stm32f1x_stlink.cfg", timeout=3)
         openocd_start_state = self.ocd.expect([
-                "Open On-Chip Debugger[\s\S]*hardware has 4 breakpoints, 2 watchpoints",
-		"Error: open failed",
-		"Error: couldn't bind to socket: Address already in use",
-		"init mode failed \(unable to connect to the target\)"
-	])
+                "Open On-Chip Debugger[\s\S]*hardware has 6 breakpoints, 4 watchpoints",
+                "Error: open failed",
+                "Error: couldn't bind to socket: Address already in use"
+                "init mode failed \(unable to connect to the target\)"
+        ])
         if openocd_start_state == 0:
-            self.logger.info("On-Chip debugger opened")
+            logging.info("On-Chip debugger opened")
         elif openocd_start_state == 1:
-            self.logger.critical("openOCD failed")
+            logging.critical("openOCD failed")
             raise OpenOCDFailed()
         elif openocd_start_state == 2:
             os.system("killall openocd")
-            self.logger.critical("openocd already active.... Now closed, run program again")
-            raise OpenOCDFailed()
-        elif openocd_start_state == 3:
-            self.logger.critical("Unable to connect to target")
+            logging.critical("openocd already active.... Now closed, run program again")
             raise OpenOCDFailed()
         else:
-            self.logger.critical("Unexpected problem")
+            logging.critical("Unexpected problem")
             raise OpenOCDFailed()
 
     def __enter__(self):
@@ -85,8 +86,7 @@ class OpenOCD:
 
     def __exit__(self, type, value, traceback):
         self.ocd.terminate()
-        self.logger.info("OpenOCD terminated")
-
+        logging.info("OpenOCD terminated")
 
 
 logging.basicConfig(format = "%(asctime)s:" + logging.BASIC_FORMAT)
@@ -97,6 +97,8 @@ logger.setLevel(logging.DEBUG)
 try:
     with OpenOCD(logger.getChild('openocd')) as openOCD:
         with TelCon(logger.getChild('telcon')) as telcon:
+            telcon.halt()
+            telcon.remove_protection()
             telcon.halt()
             telcon.erase()
             telcon.load()
