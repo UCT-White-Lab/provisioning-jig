@@ -9,6 +9,8 @@ import subprocess
 #### Use get_st-link_info.py to print this out ###
 stlinkID = "52ff68067188485525600367"#"52ff686718848552560367"
 
+wd = os.path.dirname(os.path.realpath(__file__)
+
 def byte_str_to_str(line):
     hexs = ['0x' + line[i:i+2] for i in range(0, len(line), 2)]
     byte_ints = [int(h, 16) for h in hexs]
@@ -52,22 +54,22 @@ if debug == None:
 
 # These are the bytes sent by the device, used to dynamically encrypt the fw
 key16 = byte_str_to_str(key)[:4]+byte_str_to_str(key)[8:]
-f308 = open("/home/jonathan/stm_jig/provisioning-jig/fw_update/f303_bytes_4_12.bin", "wb")
+f308 = open(wd+"/f303_bytes_4_12.bin", "wb")
 f308.write(key16)
 f308.close()
 
 # We use some java, from the update utility (decompiled, stripped down and recompiled)
 # It looks for the f308 file created above
-subprocess.Popen('java -jar STDecrypt.jar', cwd=os.path.dirname(os.path.realpath(__file__)), shell=True)
+subprocess.Popen('java -jar STDecrypt.jar', cwd=wd), shell=True)
 # If it worked, there should be a file named fw_re_encrypted.bin in this directory
 time.sleep(1) # Give the jar time to execute? Not sure this is needed
-if (os.path.isfile(os.path.dirname(os.path.realpath(__file__))+'/fw_re_encrypted.bin')):
+if (os.path.isfile(wd+'/fw_re_encrypted.bin')):
     print "success"
 else:
     print "fail"
 
-bin_file = os.path.dirname(os.path.realpath(__file__))+'/fw_re_encrypted.bin'
-fstr = open("/home/jonathan/stm_jig/provisioning-jig/fw_update/version_thingee_16.bin", 'rb').read()
+bin_file = wd+'/fw_re_encrypted.bin'
+fstr = open(wd+"/version_thingee_16.bin", 'rb').read()
 
 # Make the address commands
 address_cmds = []
