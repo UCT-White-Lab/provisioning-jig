@@ -35,10 +35,11 @@ key = ''
 devices = usb.core.find(find_all=1, idVendor=0x0483, idProduct=0x3748)
 debug = None
 for dev in devices:
-    idstr = str_to_byte_str(usb.util.get_string(dev, 3))
+    # This doesn't work on the pi - check out those udev rules? It also needs to run as root
+    #idstr = str_to_byte_str(usb.util.get_string(dev, 3))
     key = getKey(dev)
     if idstr != stlinkID:
-        print "Found ST-Link V2, id: " + idstr
+        print "Found ST-Link V2, id: " #+ idstr
         print "Key bytes: " + key
         debug = dev
 
