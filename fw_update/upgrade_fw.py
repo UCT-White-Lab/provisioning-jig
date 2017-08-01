@@ -9,7 +9,7 @@ import subprocess
 #### Use get_st-link_info.py to print this out ###
 stlinkID = "52ff68067188485525600367"#"52ff686718848552560367"
 
-wd = os.path.dirname(os.path.realpath(__file__)
+wd = os.path.dirname(os.path.realpath(__file__))
 
 def byte_str_to_str(line):
     hexs = ['0x' + line[i:i+2] for i in range(0, len(line), 2)]
@@ -60,7 +60,7 @@ f308.close()
 
 # We use some java, from the update utility (decompiled, stripped down and recompiled)
 # It looks for the f308 file created above
-subprocess.Popen('java -jar STDecrypt.jar', cwd=wd), shell=True)
+subprocess.Popen('java -jar STDecrypt.jar', cwd=wd, shell=True)
 # If it worked, there should be a file named fw_re_encrypted.bin in this directory
 time.sleep(1) # Give the jar time to execute? Not sure this is needed
 if (os.path.isfile(wd+'/fw_re_encrypted.bin')):
