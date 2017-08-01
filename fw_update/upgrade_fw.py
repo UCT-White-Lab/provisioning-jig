@@ -38,10 +38,9 @@ for dev in devices:
     # This doesn't work on the pi - check out those udev rules? It also needs to run as root
     #idstr = str_to_byte_str(usb.util.get_string(dev, 3))
     key = getKey(dev)
-    if idstr != stlinkID:
-        print "Found ST-Link V2, id: " #+ idstr
-        print "Key bytes: " + key
-        debug = dev
+    print "Found ST-Link V2, id: " #+ idstr
+    print "Key bytes: " + key
+    debug = dev
 
 
 if debug == None:
