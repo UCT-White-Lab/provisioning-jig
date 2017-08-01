@@ -24,5 +24,5 @@ def getKey(dev):
 
 devices = usb.core.find(find_all=1, idVendor=0x0483, idProduct=0x3748)
 for dev in devices:
-    print "Found ST-Link V2, id: " + str_to_byte_str(usb.util.get_string(dev, 3))
+    print "Found ST-Link V2, id: "# + str_to_byte_str(usb.util.get_string(dev, 3))
     print "Key bytes: " + getKey(dev)
