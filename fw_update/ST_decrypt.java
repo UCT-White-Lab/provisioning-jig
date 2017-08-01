@@ -148,7 +148,7 @@ public class ST_decrypt {
         byte[] key = new byte[16];//encryptionKey.getBytes();
         byte[] data = new byte[dataLength];// {0xF7, 0x72, 0x44, 0xB3, 0xFC, 0x86, 0xE0, 0xDC, 0x20, 0xE1, 0x74, 0x2D, 0x3A, 0x29, 0x0B, 0xD2};
         str_to_arr(encryptionKey, key);
-        readFileIntoArr("/home/jonathan/stm_jig/provisioning-jig/fw_update/fw_upgrade/f2_1.bin", data);
+        readFileIntoArr(System.getProperty("user.dir") + "/f2_1.bin", data);
         decrypt(data, fw, key, dataLength);
 
         System.out.println(dataLength);
@@ -211,6 +211,7 @@ public class ST_decrypt {
           File f = new File(file);
           fis = new FileInputStream(f);
       } catch (Exception ex) {
+        System.out.print(file);
           System.out.println("Invalid file name");
           System.exit(1);
       }
