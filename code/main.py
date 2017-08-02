@@ -1,22 +1,21 @@
 # Going to thrown everything in this one file for now, and then split it back out
 # as I add in IO, LCD, logging etc.
+import logging, time, pexpect
 
-target_elf = 'ksef' #<<<<<<<<<<<<<<<<<
+target_elf = '/home/jonathan/stm_jig/provisioning-jig/binaries/main.elf' #<<<<<<<<<<<<<<<<<
 
-class logger:
-    def __init__():
-        # logging.basicConfig(format = "%(asctime)s:" + logging.BASIC_FORMAT)
-        # logger = logging.getLogger()
-        # logger.setLevel(logging.DEBUG)
 
-    def info(str):
-        print "Log Info: "+str
-    def warn(str):
-        print "Log Info: "+str
+logging.basicConfig(format = "%(asctime)s:" + logging.BASIC_FORMAT)
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
-class lcd:
-    def write(str):
+class LCD:
+    def write(self, str):
         print "Lcd: " + str
+    def clear(self):
+        print "Lcd clear"
+
+lcd = LCD()
 
 class OpenOCDFailed(Exception):
     pass
@@ -141,7 +140,9 @@ class GPIO:
 
 def flashTarget():
     try:
+        print "flashing target"
         with TargetOpenOCD(logger.getChild('openocd')) as openOCD:
+            print "openOCD running "
             with TelCon(logger.getChild('telcon')) as telcon:
                 telcon.halt()
                 telcon.erase()
@@ -182,24 +183,16 @@ def flashTarget():
 
 
 
-while True:
-    try:
-        if GPIO.input(4):
-            logger.info("Button pressed")
-            lcd.write("Programming target")
-            try:
-                os.system("./target.py")
-                print("=" *70)
-                logger.info("Press the button")
-                lcd.clear()
-            except Exception:
-                logger.warn("Target program not running")
-                lcd.clear()
-                lcd.write("Oh no!!!\nTarget Escaped")
-                time.sleep(2)
-                lcd.clear()
-    except Exception:
-        logger.warn("Main program not running")
+logger.info("Button pressed")
+lcd.write("Programming target")
+try:
+    flashTarget()
+except Exception:
+    logger.warn("Target program not running")
+    lcd.clear()
+    lcd.write("Oh no!!!\nTarget Escaped")
+    time.sleep(2)
+    lcd.clear()
 # GPIO.cleanup()
 
 
