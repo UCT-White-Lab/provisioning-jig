@@ -3,7 +3,7 @@
 import logging, time, pexpect
 
 target_elf = '/home/jonathan/stm_jig/provisioning-jig/binaries/main.elf' #<<<<<<<<<<<<<<<<<
-
+debug_hex = "/home/jonathan/stm_jig/provisioning-jig/binaries/DFU_ST-Link-V2.hex"
 
 logging.basicConfig(format = "%(asctime)s:" + logging.BASIC_FORMAT)
 logger = logging.getLogger()
@@ -111,7 +111,7 @@ class TelCon:
     def remove_protection(self):
         self.tel.sendline("flash protect 0 0 last off")
         self.tel.expect("cleared protection for sectors")
-        logging.info("erased")
+        logging.info("removed protection")
 
     def erase(self):
         self.tel.sendline("flash erase_sector 0 0 0")
@@ -121,9 +121,10 @@ class TelCon:
     def load(self, hexfile):
         self.tel.sendline("flash write_image erase "+ hexfile) # /home/pi/workspace/All/debug/DFU_ST-Link-V2.hex
         self.tel.expect("[\s\S]*wrote[\s\S]*from file[\s\S]*")
+        logging.info("Loaded")
         self.tel.sendline("verify_image "+ hexfile) # /home/pi/workspace/All/debug/DFU_ST-Link-V2.hex
         self.tel.expect("[\s\S]*verified[\s\S]*bytes in[\s\S]*")
-        logging.info("LOADED!")
+        logging.info("Verified")
 
     def __exit__(self, type, value, traceback):
         self.tel.send("exit")
@@ -134,68 +135,120 @@ class GPIO:
         return False
     def cleanup():
         print "GPIO Cleanup"
-# GPIO.setmode(GPIO.BCM)
-# GPIO.setup(4, GPIO.IN)
-# GPIO.setup(17, GPIO.IN)
+
+class LEDS:
+    green_leds = []
+    # Pin stuff for WS2812 setup etc here <<<
+    def lightPin(self, pinNum, fail=False):
+        if fail:
+            print "LED %i RED" % pinNum
+        else:
+            print "LED %i GREEN" % pinNum
+            self.green_leds.append(pinNum)
+
+    def redPins(self):
+        if len(self.green_leds) != 0:
+            print "Turning pins from %i onward RED" % self.green_leds[len(self.green_leds)-1]
+
+led = LEDS() # Not sure this is the best way to do this, but makes for easy testing
+
+def powerOff():
+    print "USB POWER OFF"
+
+def powerOn():
+    print "USB POWER ON"
+
+def toggleUSBPower():
+    print "Toggling USB POWER"
 
 def flashTarget():
     try:
-        print "flashing target"
         with TargetOpenOCD(logger.getChild('openocd')) as openOCD:
-            print "openOCD running "
+            lcd.write("Started OpenOCD")
+            led.lightPin(1)
             with TelCon(logger.getChild('telcon')) as telcon:
+                led.lightPin(3)
+                lcd.write("Established \nConnection")
                 telcon.halt()
+                led.lightPin(5)
+                lcd.write("Halted target")
                 telcon.erase()
+                led.lightPin(7)
+                lcd.write("Erased target")
                 telcon.load(target_elf)
-                # light.busyOff()
-                # light.success()
-                # lcd.show_cursor(False)
-                # lcd.blink(False)
-                # lcd.clear()
-                # lcd.set_cursor(6,0)
-                # lcd.message("Target")
-                # lcd.set_cursor(0,1)
-                # lcd.message("!!!Destroyed!!!")
-                # for x in range (0,20):
-                #     lcd.set_backlight(1)
-                #     time.sleep(0.1)
-                #     lcd.set_backlight(0)
-                #     time.sleep(0.1)
+                led.lightPin(9)
+                led.lightPin(11)
+                lcd.write("Loaded demo elf\n Finished!!")
+            led.lightPin(13)
+        led.lightPin(15)
     except Exception:
-        # lcd.show_cursor(False)
-        # lcd.blink(False)
-        logging.warn("Provisioning failed")
-        # light.busyOff()
-        # light.failed()
-        # lcd.clear()
-        # message = "!!Failed!!"
-        # lcd.message(message)
-        # lcd.set_cursor(0,1)
-        # lcd.message (message)
-        # for x in range(lcd_columns - len(message)):
-        #     time.sleep(0.2)
-        #     lcd.move_right()
-        # for x in range(lcd_columns - len(message)):
-        #     time.sleep(0.2)
-        #     lcd.move_left()
-        # lcd.clear()
+        logging.warn("Target provisioning failed")
+
+def flashDebug():
+    try:
+        toggleUSBPower()
+        led.lightPin(1)
+        time.sleep(0.1)
+        try:
+            with DebugOpenOCD(logger.getChild('openocd')) as openOCD:
+                led.lightPin(2)
+                with TelCon(logger.getChild('telcon')) as telcon:
+                    led.lightPin(3)
+                    telcon.halt()
+                    led.lightPin(4)
+                    telcon.remove_protection()
+                    led.lightPin(5)
+                    telcon.halt()
+                    led.lightPin(6)
+                    telcon.erase()
+                    led.lightPin(7)
+                    telcon.load(debug_hex)
+                    led.lightPin(8)
+                    led.lightPin(9)
+                led.lightPin(10)
+            led.lightPin(11)
+        except:
+            logging.warn("Provisioning failed")
+        toggleUSBPower()
+        led.lightPin(12)
+        print "Update fw here" # Hard stuff to come
+
+    except Exception:
+        logging.warn("Lights or button initialisation failed")
 
 
 
+button_target = False
+button_debug = True
 
 logger.info("Button pressed")
-lcd.write("Programming target")
-try:
-    flashTarget()
-except Exception:
-    logger.warn("Target program not running")
-    lcd.clear()
-    lcd.write("Oh no!!!\nTarget Escaped")
-    time.sleep(2)
-    lcd.clear()
+if button_target:
+    lcd.write("Target Selected")
+    logger.info("Target Selected")
+    try:
+        flashTarget()
+        led.lightPin(17)
+        led.lightPin(18)
+    except Exception:
+        led.redPins() # turns all remaining LEDs red
+        logger.warn("Target flashing failed")
+        lcd.clear()
+        lcd.write("Oh no!!!\nTarget Escaped")
+        time.sleep(2)
+        lcd.clear()
 # GPIO.cleanup()
 
-
+elif button_debug:
+    lcd.write("Programming Debugger")
+    logger.info("Debugger Selected")
+    try:
+        flashDebug()
+    except Exception:
+        logger.warn("Programming debugger failed")
+        lcd.clear()
+        lcd.write("Oh no!!!\nDebugger not flashed")
+        time.sleep(2)
+        lcd.clear()
 
 
 # The real horror erupted on the day that three events happened
