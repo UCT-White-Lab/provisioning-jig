@@ -1,9 +1,13 @@
 # Going to thrown everything in this one file for now, and then split it back out
 # as I add in IO, LCD, logging etc.
-import logging, time, pexpect
+import logging, time, pexpect, os, usb.core
 
-target_elf = '/home/jonathan/stm_jig/provisioning-jig/binaries/main.elf' #<<<<<<<<<<<<<<<<<
-debug_hex = "/home/jonathan/stm_jig/provisioning-jig/binaries/DFU_ST-Link-V2.hex"
+wd = os.path.dirname(os.path.realpath(__file__))
+
+target_elf = wd + '/../binaries/main.elf' #<<<<<<<<<<<<<<<<<
+debug_hex = wd + "/../binaries/DFU_ST-Link-V2.hex"
+
+pNum = 2 # Which USB PORT IS POWERS THE DEBUGGERS?
 
 logging.basicConfig(format = "%(asctime)s:" + logging.BASIC_FORMAT)
 logger = logging.getLogger()
@@ -154,12 +158,22 @@ led = LEDS() # Not sure this is the best way to do this, but makes for easy test
 
 def powerOff():
     print "USB POWER OFF"
+    hubs = usb.core.find(find_all=True, bDeviceClass=usb.CLASS_HUB)
+	dev_hub = hubs.next()
+	dev_hub.ctrl_transfer((usb.TYPE_CLASS | usb.RECIP_OTHER), 1, 8, pNum)
 
 def powerOn():
     print "USB POWER ON"
+    hubs = usb.core.find(find_all=True, bDeviceClass=usb.CLASS_HUB)
+    dev_hub = hubs.next()
+    dev_hub.ctrl_transfer((usb.TYPE_CLASS | usb.RECIP_OTHER), 3, 8, pNum)
 
 def toggleUSBPower():
     print "Toggling USB POWER"
+    powerOff()
+    time.sleep(0.1)
+    powerOn()
+
 
 def flashTarget():
     try:

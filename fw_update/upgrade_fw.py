@@ -53,6 +53,7 @@ if debug == None:
 # send them to the device.
 
 # These are the bytes sent by the device, used to dynamically encrypt the fw
+# Thoery: it's a set first four bytes + the device ID?
 key16 = byte_str_to_str(key)[:4]+byte_str_to_str(key)[8:]
 f308 = open(wd+"/f303_bytes_4_12.bin", "wb")
 f308.write(key16)
