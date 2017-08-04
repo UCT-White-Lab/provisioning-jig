@@ -7,7 +7,7 @@ import subprocess
 
 #### SET THIS ONCE - FOR THE BUILT IN ST-LINK ####
 #### Use get_st-link_info.py to print this out ###
-stlinkID = "52ff68067188485525600367"#"52ff686718848552560367"
+stlinkID = "52ff68067188485525600367"#""
 
 wd = os.path.dirname(os.path.realpath(__file__))
 
@@ -198,7 +198,7 @@ wait_for_ready()
 
 
 dev.write(0x02, byte_str_to_str("f3010200930d10000000000000000000"), 100)
-# This bit is also encrypted by STDecrypt (TODO!!!) - it's the firmware version
+# This bit is also encrypted by STDecrypt think it's the firmware version
 dev.write(0x02, fstr, 100) # "1152a590a0cf13fd7e66d64915d5c5bd" This is unique to each device - investigate!!!
 
 print "wrote stuff"
