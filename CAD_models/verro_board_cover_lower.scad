@@ -23,13 +23,27 @@ projection(){
              rotate(90){debug_cutout();}
         }
         
-        translate([0, 11*pin_pitch, 0]){
-             translate([-14, -28, 0]){
-                rotate(90){debug_cutout();}
-            }
+        translate([-14, -28+11*pin_pitch, 0]){
+            rotate(90){debug_cutout();}
         }
+        
+        translate([-14+18*pin_pitch, -28, 0]){
+             rotate(90){debug_cutout();}
+        }
+        // the built in debugger
         translate([0, -67.5, 0]){
-            cube([80, 28, 10], center=true);
+            cube([80, 25, 10], center=true);
+        }
+        // USB cutouts
+        translate([32.5, -67.5, 0]){
+            cube([15, 32, 10], center=true);
+        }
+        translate([-32.5, -67.5, 0]){
+            cube([15, 32, 10], center=true);
+        }
+        
+        translate([13.5, 55, 0]){
+            cube([63, 10,10], center=true);
         }
         
     }
@@ -37,24 +51,10 @@ projection(){
 
 module debug_cutout () {
     cube([24.4, 18.5,10], center=true);
-    cube([19, 34,10], center=true);
-    translate([0, -15, -20]){
-        cylinder(50, 9.5, 9.5);
-    }
-    translate([0, 15, -20]){
-        cylinder(50, 9.5, 9.5);
-    }
 }
 
 // Edit this
 module target_cutout () {
-    cube([62.6, 19.3,10], center=true);
-    cube([25, 30,10], center=true);
-    cube([75, 14,10], center=true);
-    translate([35, 0, -20]){
-        cylinder(50, 7, 7);
-    }
-    translate([-35, 0, -20]){
-        cylinder(50, 7, 7);
-    }
+    cube([63, 19.3,10], center=true);
+    
 }
