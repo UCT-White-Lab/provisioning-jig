@@ -52,9 +52,9 @@ module target_cutout () {
     cube([25, 30,10], center=true);
     cube([75, 14,10], center=true);
     translate([35, 0, -20]){
-        cylinder(50, 7, 7);
+        cylinder(50, 7.5, 7.5);
     }
     translate([-35, 0, -20]){
-        cylinder(50, 7, 7);
+        cylinder(50, 7.5, 7.5);
     }
 }

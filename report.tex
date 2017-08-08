@@ -1,0 +1,146 @@
+\documentclass[a4paper]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\title{Provisioning Jig}
+\author{Jonathan Whitaker}
+
+\begin{document}
+\maketitle
+
+% \begin{abstract}
+% Your abstract.
+% \end{abstract}
+
+\section{Introduction}
+
+The goal of this project was to update and improve the provisioning jig used in the white lab to program and update the debuggers and micro used in various 'Intro to Micros' courses. This involved creating a new version, without the need for a dedicated PC to run the ST-Link update utility and with a smaller, more robust form factor. In this report I'll detail the state of the project when I began (including instructions on running with the original setup should the new version fail or break), the changes and improvements made, how each section works and some recommendations going forward. 
+
+\section{Where we are}
+
+\section{Where we were}
+
+...
+
+\section{The current set up}
+
+\subsection{Overview}
+
+\subsection{The LCD Board}
+
+\subsection{The Main Board}
+
+The main board has spring loaded contacts and female headers to receive a blank target or debugger board, with or without the header pins soldered on. An ST-Link is connected to one USB port, and is used to flash both the target and the debugger. SWCLK is connected to both the target and the debugger contacts, but SWDIO and power are only connected to one or the other, depending on the position of the switch. The debugger socket is also connected up to the second USB port to allow for firmware updating. For debugger boards with header pins already soldered, two wires hang off the side of the board, to be connected to the test points for flashing. Purple is SWCLK (TP2) and green is SWDIO (TP1). On the board, black wires are ground, orange are VTarget and Yellow are 5V or VDebug. A third row of pin headers (closest to the edge of the board) above where the switch connects run to the LCD Board, providing power to that board (5V) and allowing the pi to read the position of the switch. A rough schematic is attached in Appendix X
+
+\subsection{The Code}
+
+\subsection{The Firmware Update Process}
+
+Without the right firmware, the debugger board is nothing more than an STM32F1 and some jellybeans. What turns it into a fancy debugging tool is ST's proprietary firmware. We have (thanks to an NDA and a great deal of stress) access to a hex file from ST so that we can make our own ST-Links. Once this is flashed, the firmware needs to be uploaded with the update utility provided by ST publicly on their website. Sadly, this isn't available for the Raspberry Pi architecture, hence the need for a PC in the old jig. To get around this, I reverse engineered the firmware update process bu inspecting USB traffic while the update utility was running and decompiling their executable. Some of the early work was done by Taylor Killian, and extended by XXX [REFS], but neither went very deep since they just used the provided utility to flash their modified firmware. Here's how it works:
+
+The firmware files are stored within the jar file, but encrypted to protect ST's business. When the updater is run, the relevant firmware file is decrypted (the key is XXX). The debugger sends a (possibly unique) key, which is encrypted with a different key (XXX) and then those encrypted bytes are used as a key to re-encrypt the firmware, which is then segmented and sent to the device. 
+
+The USB protocol for loading the encrypted firmware is as follows:
+\begin{itemize}
+\item The host tells the debugger to enter firmware update mode (command XXX) and writes to a couple of memory locations.
+\item The host send the command F308, and receives 20 bytes in response (of these, X are the device ID and Y are (apparently) dynamically generated somehow). The first four and last 12 of these bytes are what we encrypt and use as the key to encrypt the firmware before we send it.
+\item The firmware is sent in 1024 byte chunks. For each chunk, the host needs to tell the chip where to write the data. First, it sends a command that looks something like XXXXXXXXXXXX. AAA is a checksum, BB is a counter (which cycles through 02, 03 and 04) and C... Next, it sends a packet of the form 21XXXXXXXX. This corresponds to the address XXXXXXXX. The debugger then knows that the next packet it receives will need to be written to said address. 
+\item In between all this, the host uses the command F303XXX to check if the debugger is ready to receive the next commands. A response of XXXXX indicates the device is ready, whereas XXXXXX means it is still busy.
+\item Once all the firmware chunks have been sent, a version string is encrypted and sent in the same way, the firmware version is read and the process is complete.
+\end{itemize}
+
+For a deeper look at how this works, inspect the USB logs and code in the github folder.
+
+
+...
+
+
+
+\section{Some examples to get started}
+
+\subsection{How to include Figures}
+
+First you have to upload the image file from your computer using the upload link the project menu. Then use the includegraphics command to include it in your document. Use the figure environment and the caption command to add a number and a caption to your figure. See the code for Figure \ref{fig:frog} in this section for an example.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.3\textwidth]{frog.jpg}
+\caption{\label{fig:frog}This frog was uploaded via the project menu.}
+\end{figure}
+
+\subsection{How to add Comments}
+
+Comments can be added to your project by clicking on the comment icon in the toolbar above. % * <john.hammersley@gmail.com> 2016-07-03T09:54:16.211Z:
+%
+% Here's an example comment!
+%
+To reply to a comment, simply click the reply button in the lower right corner of the comment, and you can close them when you're done.
+
+Comments can also be added to the margins of the compiled PDF using the todo command\todo{Here's a comment in the margin!}, as shown in the example on the right. You can also add inline comments:
+
+\todo[inline, color=green!40]{This is an inline comment.}
+
+\subsection{How to add Tables}
+
+Use the table and tabular commands for basic tables --- see Table~\ref{tab:widgets}, for example. 
+
+\begin{table}
+\centering
+\begin{tabular}{l|r}
+Item & Quantity \\\hline
+Widgets & 42 \\
+Gadgets & 13
+\end{tabular}
+\caption{\label{tab:widgets}An example table.}
+\end{table}
+
+\subsection{How to write Mathematics}
+
+\LaTeX{} is great at typesetting mathematics. Let $X_1, X_2, \ldots, X_n$ be a sequence of independent and identically distributed random variables with $\text{E}[X_i] = \mu$ and $\text{Var}[X_i] = \sigma^2 < \infty$, and let
+\[S_n = \frac{X_1 + X_2 + \cdots + X_n}{n}
+      = \frac{1}{n}\sum_{i}^{n} X_i\]
+denote their mean. Then as $n$ approaches infinity, the random variables $\sqrt{n}(S_n - \mu)$ converge in distribution to a normal $\mathcal{N}(0, \sigma^2)$.
+
+
+\subsection{How to create Sections and Subsections}
+
+Use section and subsections to organize your document. Simply use the section and subsection buttons in the toolbar to create them, and we'll handle all the formatting and numbering automatically.
+
+\subsection{How to add Lists}
+
+You can make lists with automatic numbering \dots
+
+\begin{enumerate}
+\item Like this,
+\item and like this.
+\end{enumerate}
+\dots or bullet points \dots
+\begin{itemize}
+\item Like this,
+\item and like this.
+\end{itemize}
+
+\subsection{How to add Citations and a References List}
+
+You can upload a \verb|.bib| file containing your BibTeX entries, created with JabRef; or import your \href{https://www.overleaf.com/blog/184}{Mendeley}, CiteULike or Zotero library as a \verb|.bib| file. You can then cite entries from it, like this: \cite{greenwade93}. Just remember to specify a bibliography style, as well as the filename of the \verb|.bib|.
+
+You can find a \href{https://www.overleaf.com/help/97-how-to-include-a-bibliography-using-bibtex}{video tutorial here} to learn more about BibTeX.
+
+We hope you find Overleaf useful, and please let us know if you have any feedback using the help menu above --- or use the contact form at \url{https://www.overleaf.com/contact}!
+
+\bibliographystyle{alpha}
+\bibliography{sample}
+
+\end{document}
